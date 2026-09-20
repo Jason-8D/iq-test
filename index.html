@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图形推理智力测试</title>
+<style>
+/* ---------- 主题色板（参考 dataviz 校验色板） ---------- */
+:root {
+  color-scheme: light;
+  --plane: #f9f9f7;        /* 页面背景 */
+  --surface: #fcfcfb;      /* 卡片表面 */
+  --ink: #0b0b0b;          /* 主文字 */
+  --ink2: #52514e;         /* 次要文字 */
+  --muted: #898781;        /* 弱化文字/坐标轴 */
+  --gridline: #e1e0d9;     /* 网格线 */
+  --baseline: #c3c2b7;     /* 坐标轴 */
+  --border: rgba(11,11,11,0.10);
+  --series1: #2a78d6;      /* 主强调色 */
+  --series1-deep: #256abf; /* 按钮底色 */
+  --good: #0ca30c;
+  --critical: #d03b3b;
+  --sel-wash: rgba(42,120,214,0.08);
+  --fig-half: color-mix(in srgb, currentColor 30%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --plane: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #ffffff;
+    --ink2: #c3c2b7;
+    --muted: #898781;
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255,255,255,0.10);
+    --series1: #3987e5;
+    --series1-deep: #2a78d6;
+    --good: #0ca30c;
+    --critical: #d03b3b;
+    --sel-wash: rgba(57,135,229,0.16);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --plane: #0d0d0d;
+  --surface: #1a1a19;
+  --ink: #ffffff;
+  --ink2: #c3c2b7;
+  --muted: #898781;
+  --gridline: #2c2c2a;
+  --baseline: #383835;
+  --border: rgba(255,255,255,0.10);
+  --series1: #3987e5;
+  --series1-deep: #2a78d6;
+  --good: #0ca30c;
+  --critical: #d03b3b;
+  --sel-wash: rgba(57,135,229,0.16);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--plane);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; max-width: 960px; margin: 0 auto;
+}
+header .brand { font-weight: 700; letter-spacing: .02em; }
+#themeBtn {
+  background: var(--surface); color: var(--ink2);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 12px; font-size: 14px; cursor: pointer;
+}
+#themeBtn:hover { border-color: var(--series1); color: var(--ink); }
+
+main { max-width: 960px; margin: 0 auto; padding: 8px 20px 48px; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 24px;
+}
+
+/* ---------- 开始页 ---------- */
+#screen-start { max-width: 680px; margin: 24px auto; text-align: center; }
+#screen-start h1 { font-size: 30px; margin: 8px 0 4px; }
+#screen-start .sub { color: var(--ink2); margin-bottom: 24px; }
+.rules { text-align: left; margin: 0 auto 20px; max-width: 560px; color: var(--ink2); }
+.rules li { margin: 6px 0; }
+.demo {
+  display: flex; gap: 8px; justify-content: center; align-items: stretch; margin: 18px auto;
+  max-width: 320px;
+}
+.demo .cell {
+  width: 96px; height: 96px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface); display: flex; align-items: center; justify-content: center;
+  padding: 4px;
+}
+.demo .cell svg { width: 100%; height: 100%; }
+.demo .q { color: var(--muted); font-size: 26px; font-weight: 700; align-self: center; }
+.btn-primary {
+  background: var(--series1-deep); color: #fff; border: none; border-radius: 10px;
+  font-size: 17px; font-weight: 600; padding: 12px 44px; cursor: pointer;
+  font-family: inherit;
+}
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-ghost {
+  background: transparent; color: var(--ink2);
+  border: 1px solid var(--border); border-radius: 10px;
+  font-size: 15px; padding: 10px 26px; cursor: pointer; font-family: inherit;
+}
+.btn-ghost:hover { border-color: var(--series1); color: var(--ink); }
+.disclaimer { color: var(--muted); font-size: 13px; margin-top: 22px; }
+
+/* ---------- 答题页 ---------- */
+#screen-test { max-width: 760px; margin: 12px auto; }
+.test-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.q-count { font-weight: 700; font-size: 17px; }
+.dots-nav { display: flex; gap: 5px; flex-wrap: wrap; max-width: 320px; }
+.dots-nav button {
+  width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--surface); cursor: pointer; padding: 0;
+  font-size: 11px; color: var(--ink2); font-family: inherit;
+}
+.dots-nav button.current { border-color: var(--series1); color: var(--series1); font-weight: 700; }
+.dots-nav button.answered { background: var(--sel-wash); }
+.timer { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 17px; }
+.timer.warn { color: var(--critical); }
+.matrix {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  max-width: 400px; margin: 20px auto;
+}
+.matrix .cell {
+  aspect-ratio: 1; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--surface); display: flex; align-items: center; justify-content: center;
+  padding: 6px;
+}
+.matrix .cell svg { width: 100%; height: 100%; }
+.matrix .cell.missing { color: var(--muted); font-size: 30px; font-weight: 700; }
+.options {
+  display: grid; grid-template-columns: repeat(4, minmax(72px, 1fr));
+  gap: 10px; max-width: 560px; margin: 18px auto;
+}
+.options button {
+  aspect-ratio: 1; border: 1.5px solid var(--border); border-radius: 10px;
+  background: var(--surface); cursor: pointer; padding: 6px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; transition: border-color .12s;
+}
+.options button svg { width: 100%; height: 100%; pointer-events: none; }
+.options button:hover { border-color: var(--muted); }
+.options button.selected { border: 2.5px solid var(--series1); background: var(--sel-wash); }
+.options button .tag {
+  position: absolute; top: 3px; left: 7px; font-size: 12px; color: var(--muted);
+}
+.test-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+
+/* ---------- 支付解锁页 ---------- */
+#screen-pay { max-width: 680px; margin: 24px auto; text-align: center; }
+#screen-pay h1 { font-size: 26px; margin: 8px 0 4px; }
+#screen-pay .sub { color: var(--ink2); }
+.pay-price { font-size: 46px; font-weight: 800; color: var(--series1); margin: 14px 0 2px; font-variant-numeric: tabular-nums; }
+.pay-price .cur { font-size: 24px; margin-right: 2px; }
+.qr-row { display: flex; gap: 18px; justify-content: center; margin: 16px auto 2px; flex-wrap: wrap; }
+.qr-box { width: 208px; }
+.qr-frame {
+  width: 208px; height: 208px; border: 1px solid var(--border); border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  background: var(--surface); margin: 0 auto;
+}
+.qr-frame img { width: 100%; height: 100%; object-fit: contain; }
+.qr-frame.qr-empty {
+  border-style: dashed; color: var(--muted); font-size: 13px; line-height: 1.6;
+  padding: 14px;
+}
+.qr-label { font-size: 14px; font-weight: 600; margin-top: 8px; color: var(--ink2); }
+.pay-steps { text-align: left; margin: 16px auto 18px; max-width: 430px; color: var(--ink2); }
+.pay-steps li { margin: 4px 0; }
+.pay-steps b { color: var(--ink); }
+
+/* ---------- 结果页 ---------- */
+#screen-result { max-width: 720px; margin: 12px auto; }
+.result-head { text-align: center; margin-bottom: 20px; }
+.hero {
+  font-size: 84px; font-weight: 800; line-height: 1; letter-spacing: -.01em;
+  font-variant-numeric: tabular-nums;
+}
+.hero-unit { color: var(--muted); font-size: 20px; font-weight: 600; margin-left: 4px; }
+.level-chip {
+  display: inline-block; margin-top: 12px; padding: 5px 18px; border-radius: 999px;
+  border: 1px solid var(--border); font-size: 15px; font-weight: 600; color: var(--ink2);
+}
+.result-sub { color: var(--ink2); margin-top: 8px; }
+.chart-card { margin-bottom: 18px; }
+.chart-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+.chart-wrap { position: relative; }
+.chart-wrap svg { width: 100%; height: auto; display: block; }
+#chartTooltip {
+  position: absolute; display: none; pointer-events: none;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 10px; font-size: 13px; white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08); z-index: 5;
+}
+table.review { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.review th, table.review td {
+  border-bottom: 1px solid var(--border); padding: 8px 6px; text-align: center;
+}
+table.review th { color: var(--ink2); font-weight: 600; border-bottom: 2px solid var(--baseline); }
+table.review td { vertical-align: middle; }
+table.review .num, table.review .type { font-variant-numeric: tabular-nums; }
+table.review .type { color: var(--ink2); font-size: 13px; }
+table.review .mini {
+  display: inline-flex; width: 54px; height: 54px; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: 8px; padding: 3px; background: var(--surface);
+}
+table.review .mini svg { width: 100%; height: 100%; }
+table.review .mini.na { border-style: dashed; color: var(--muted); font-size: 13px; }
+.ok { color: var(--good); font-weight: 700; }
+.bad { color: var(--critical); font-weight: 700; }
+.result-actions { display: flex; gap: 12px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+
+@media (max-width: 560px) {
+  .hero { font-size: 64px; }
+  .options { grid-template-columns: repeat(4, minmax(64px, 1fr)); gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">图形推理智力测试</div>
+  <button id="themeBtn" type="button">🌙 深色</button>
+</header>
+
+<main>
+  <!-- 开始页 -->
+  <section id="screen-start">
+    <div class="card">
+      <h1>图形推理智力测试</h1>
+      <div class="sub">20 题 · 限时 15 分钟 · 看图找规律</div>
+      <ul class="rules">
+        <li>每题给出一个 3×3 的图形矩阵，缺了右下角一格，请从 8 个选项中选出正确的一个。</li>
+        <li>规律包括：数量变化、旋转、叠加、位置移动、形状/填充循环、镜像等。</li>
+        <li>答题不限顺序，可随时回看修改；总限时 15 分钟，时间到自动交卷。</li>
+        <li>完成后按 IQ 分数制给出结果（均值 100，标准差 15）。</li>
+        <li>完成测试后需支付少量费用查看完整结果（支持微信 / 支付宝扫码）。</li>
+      </ul>
+      <div class="demo">
+        <div class="cell" id="demo1"></div>
+        <div class="cell" id="demo2"></div>
+        <div class="cell q">?</div>
+      </div>
+      <button class="btn-primary" id="startBtn" type="button">开始测试</button>
+      <p class="disclaimer">本测试为趣味性智力测验，结果仅供参考，不能替代专业心理测量。</p>
+    </div>
+  </section>
+
+  <!-- 答题页 -->
+  <section id="screen-test" hidden>
+    <div class="card">
+      <div class="test-top">
+        <span class="q-count" id="qCount"></span>
+        <div class="dots-nav" id="dotsNav"></div>
+        <span class="timer" id="timer">⏱ 15:00</span>
+      </div>
+      <div class="matrix" id="matrix"></div>
+      <div class="options" id="options"></div>
+      <div class="test-foot">
+        <button class="btn-ghost" id="prevBtn" type="button">← 上一题</button>
+        <button class="btn-primary" id="submitBtn" type="button">交卷</button>
+        <button class="btn-ghost" id="nextBtn" type="button">下一题 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 支付解锁页 -->
+  <section id="screen-pay" hidden>
+    <div class="card">
+      <h1>测试已完成</h1>
+      <div class="sub">支付后解锁完整结果：IQ 分数、等级、分布图与逐题回顾</div>
+      <div class="pay-price"><span class="cur">¥</span><span id="payPrice">--</span></div>
+      <div class="qr-row">
+        <div class="qr-box" id="qrWx"></div>
+        <div class="qr-box" id="qrAli"></div>
+      </div>
+      <ol class="pay-steps">
+        <li>打开<b>微信</b>或<b>支付宝</b>扫一扫</li>
+        <li>向出题人支付 <b id="payAmount">--</b> 元</li>
+        <li>支付完成后点击下方按钮，立即解锁结果</li>
+      </ol>
+      <button class="btn-primary" id="payUnlockBtn" type="button">我已支付，查看结果</button>
+      <p class="disclaimer">支付即视为认可本测试的趣味性定位，结果仅供参考，不能替代专业心理测量。</p>
+      <p><button class="btn-ghost" id="payHomeBtn" type="button">暂不支付，返回首页</button></p>
+    </div>
+  </section>
+
+  <!-- 结果页 -->
+  <section id="screen-result" hidden>
+    <div class="result-head">
+      <div>
+        <span class="hero" id="heroIQ">--</span><span class="hero-unit">IQ</span>
+      </div>
+      <div class="level-chip" id="levelChip"></div>
+      <div class="result-sub" id="resultSub"></div>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-title">你的 IQ 在正态分布中的位置</div>
+      <div class="chart-wrap" id="chartWrap"></div>
+    </div>
+    <div class="card">
+      <div class="chart-title">答题回顾</div>
+      <table class="review">
+        <thead>
+          <tr><th>#</th><th>题型</th><th>你的答案</th><th>正确答案</th><th>结果</th></tr>
+        </thead>
+        <tbody id="reviewBody"></tbody>
+      </table>
+    </div>
+    <div class="result-actions">
+      <button class="btn-primary" id="retryBtn" type="button">重新测试</button>
+      <button class="btn-ghost" id="homeBtn" type="button">返回首页</button>
+    </div>
+  </section>
+</main>
+
+<script>
+'use strict';
+/* ============================================================
+ * 收款配置 —— 使用前改成你自己的收款码
+ * PRICE  ：查看结果的价格（元）
+ * WX_QR  ：微信收款码图片。填图片文件名（与本文件放同一目录，如 'wx.png'），
+ *          或填 base64 数据（data:image/png;base64,...，便于单文件分享）
+ * ALI_QR ：支付宝收款码，同上
+ * 留空字符串 '' 则显示"待替换"占位框
+ * ============================================================ */
+const PRICE = '1.99';
+const WX_QR  = '';
+const ALI_QR = '';
+/* ============================================================
+ * 一、纯逻辑部分：图形生成、题库、计分（与 DOM 无关）
+ * ============================================================ */
+
+/* ---- SVG 基础图形助手（画布 100×100） ---- */
+const SOLID  = 'currentColor';
+const EMPTY  = 'transparent';
+const HALF   = 'var(--fig-half)';
+
+function svg(inner) {
+  return '<svg viewBox="0 0 100 100" aria-hidden="true">' + inner + '</svg>';
+}
+function poly(pts, fill, rot) {
+  const t = rot ? ' transform="rotate(' + rot + ' 50 50)"' : '';
+  return '<polygon points="' + pts.map(p => p.join(',')).join(' ')
+    + '" fill="' + fill + '" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"' + t + '/>';
+}
+function circ(cx, cy, r, fill) {
+  fill = fill || SOLID;
+  return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r
+    + '" fill="' + fill + '" stroke="currentColor" stroke-width="2.5"/>';
+}
+function sq(cx, cy, s, fill, rot) {
+  fill = fill || SOLID;
+  const t = rot ? ' transform="rotate(' + rot + ' ' + cx + ' ' + cy + ')"' : '';
+  return '<rect x="' + (cx - s / 2) + '" y="' + (cy - s / 2) + '" width="' + s
+    + '" height="' + s + '" fill="' + fill + '" stroke="currentColor" stroke-width="2.5"' + t + '/>';
+}
+function ngon(cx, cy, n, s, fill, rot) {
+  fill = fill || SOLID;
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const a = Math.PI * 2 * i / n - Math.PI / 2;
+    pts.push([cx + Math.cos(a) * s, cy + Math.sin(a) * s]);
+  }
+  return poly(pts, fill, rot);
+}
+const tri  = (cx, cy, s, fill, rot) => ngon(cx, cy, 3, s * 1.06, fill, rot);
+const pent = (cx, cy, s, fill, rot) => ngon(cx, cy, 5, s, fill, rot);
+const hex  = (cx, cy, s, fill, rot) => ngon(cx, cy, 6, s, fill, rot);
+function line(x1, y1, x2, y2, w) {
+  return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2
+    + '" stroke="currentColor" stroke-width="' + (w || 2.5) + '" stroke-linecap="round"/>';
+}
+/* 箭头：指向 deg 度（0=上，顺时针） */
+function arrow(cx, cy, len, deg, fill) {
+  fill = fill || SOLID;
+  const a = deg * Math.PI / 180;
+  const ux = Math.cos(a), uy = -Math.sin(a);
+  const tx = cx + ux * len / 2, ty = cy + uy * len / 2;
+  const hx = cx + ux * (len / 2 - 12), hy = cy + uy * (len / 2 - 12);
+  const bx = cx - ux * len / 2, by = cy - uy * len / 2;
+  const px = -uy * 7, py = -ux * 7;
+  return line(bx, by, hx, hy)
+    + '<polygon points="' + tx + ',' + ty + ' ' + (hx + px) + ',' + (hy + py) + ' '
+    + (hx - px) + ',' + (hy - py) + '" fill="' + fill
+    + '" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>';
+}
+/* 水平镜像 */
+function mirrorX(inner) {
+  return '<g transform="translate(100 0) scale(-1 1)">' + inner + '</g>';
+}
+/* 一排 n 个圆点（水平居中） */
+function dotsRow(n, r) {
+  r = r || 6.5;
+  let s = '';
+  for (let i = 0; i < n; i++) {
+    s += circ(50 + (i - (n - 1) / 2) * 20, 50, r);
+  }
+  return s;
+}
+/* 一列 n 个圆点 */
+function dotsCol(n, r) {
+  r = r || 6.5;
+  let s = '';
+  for (let i = 0; i < n; i++) {
+    s += circ(50, 50 + (i - (n - 1) / 2) * 20, r);
+  }
+  return s;
+}
+/* 固定排布的 n 个圆点（对角/三角/四角） */
+function dotsGrid(n) {
+  const pos = {
+    1: [[50, 50]],
+    2: [[38, 38], [62, 62]],
+    3: [[34, 34], [66, 34], [50, 66]],
+    4: [[34, 34], [66, 34], [34, 66], [66, 66]],
+    5: [[32, 32], [68, 32], [50, 50], [32, 68], [68, 68]]
+  }[n];
+  return pos.map(p => circ(p[0], p[1], 5.5)).join('');
+}
+const plus   = (cx, cy, len) => line(cx - len / 2, cy, cx + len / 2, cy)
+  + line(cx, cy - len / 2, cx, cy + len / 2);
+const crossX = (cx, cy, len) => { const d = len / 2 * 0.707;
+  return line(cx - d, cy - d, cx + d, cy + d) + line(cx - d, cy + d, cx + d, cy - d); };
+/* L 形折线（开口向右下），可旋转 */
+const LShape = (deg) => '<g transform="rotate(' + deg + ' 50 50)">'
+  + line(38, 64, 38, 36) + line(38, 36, 64, 36) + '</g>';
+/* 不对称阶梯折线（水平镜像后图形不同） */
+const stair = () => line(30, 62, 30, 34) + line(30, 34, 54, 34) + line(54, 34, 54, 62);
+/* 旗帜：竖杆 + 顶部右指三角 */
+const flagR = () => line(42, 26, 42, 74) + tri(60, 36, 22, SOLID, 90);
+
+/* ---- 题库：每题 grid(r,c) 生成 3×3 矩阵，dists() 返回 7 个干扰项 ---- */
+const QUESTIONS = [
+  {
+    name: '数量递增（列）',
+    grid: (r, c) => svg(dotsRow(c + 1)),
+    dists: () => [svg(dotsRow(2)), svg(dotsRow(4)), svg(dotsRow(1)),
+      svg(dotsRow(5)), svg(dotsGrid(3)), svg(dotsCol(3)), svg(dotsRow(6, 5.5))]
+  },
+  {
+    name: '旋转 45°',
+    grid: (r, c) => svg(arrow(50, 50, 60, (c + 3 * r) * 45 % 360)),
+    dists: () => [45, 90, 135, 180, 225, 270, 315].map(d => svg(arrow(50, 50, 60, d)))
+  },
+  {
+    name: '叠加组合',
+    grid: (r, c) => {
+      const A = [line(32, 32, 68, 68), circ(35, 50, 12), sq(35, 50, 24)];
+      const B = [line(32, 68, 68, 32), circ(65, 50, 12), sq(65, 50, 24)];
+      return svg((c === 0 ? A[r] : '') + (c === 1 ? B[r] : '') + (c === 2 ? A[r] + B[r] : ''));
+    },
+    dists: () => [
+      svg(circ(35, 50, 12) + circ(65, 50, 12)),
+      svg(sq(35, 50, 24)),
+      svg(sq(65, 50, 24)),
+      svg(sq(50, 32, 24) + sq(50, 68, 24)),
+      svg(tri(35, 50, 22) + tri(65, 50, 22)),
+      svg(circ(35, 50, 12) + sq(65, 50, 24)),
+      svg(line(32, 32, 68, 68) + line(32, 68, 68, 32))
+    ]
+  },
+  {
+    name: '并集叠加',
+    grid: (r, c) => {
+      const A = [circ(50, 34, 13), tri(50, 32, 24), sq(50, 32, 24)];
+      const B = [sq(50, 68, 24), circ(50, 68, 13), tri(50, 68, 24)];
+      return svg((c === 0 ? A[r] : '') + (c === 1 ? B[r] : '') + (c === 2 ? A[r] + B[r] : ''));
+    },
+    dists: () => [
+      svg(circ(50, 34, 13) + sq(50, 68, 24)),
+      svg(tri(50, 32, 24) + circ(50, 68, 13)),
+      svg(sq(50, 32, 24) + circ(50, 68, 13)),
+      svg(tri(50, 32, 24) + sq(50, 68, 24)),
+      svg(sq(50, 32, 24)),
+      svg(tri(50, 68, 24)),
+      svg(sq(50, 32, 24) + sq(50, 68, 24))
+    ]
+  },
+  {
+    name: '形状循环',
+    grid: (r, c) => {
+      const shapes = [
+        (fill) => circ(50, 50, 22, fill),
+        (fill) => sq(50, 50, 36, fill),
+        (fill) => tri(50, 50, 30, fill)
+      ];
+      return svg(shapes[(r + c) % 3](SOLID));
+    },
+    dists: () => [
+      svg(circ(50, 50, 22)), svg(tri(50, 50, 30)), svg(pent(50, 50, 24)),
+      svg(hex(50, 50, 24)), svg(sq(50, 50, 36, SOLID, 45)),
+      svg(sq(50, 50, 36, HALF)), svg(sq(50, 50, 24))
+    ]
+  },
+  {
+    name: '位置移动（顺时针）',
+    grid: (r, c) => {
+      const corners = [[30, 30], [70, 30], [70, 70], [30, 70]];
+      const p = corners[(r + c) % 4];
+      return svg(circ(p[0], p[1], 9));
+    },
+    dists: () => [
+      svg(circ(70, 30, 9)), svg(circ(70, 70, 9)), svg(circ(30, 70, 9)),
+      svg(circ(50, 50, 9)), svg(circ(30, 30, 14)), svg(sq(30, 30, 18)),
+      svg(circ(30, 30, 7) + circ(70, 70, 7))
+    ]
+  },
+  {
+    name: '行列总数守恒',
+    grid: (r, c) => {
+      const counts = [[3, 1, 2], [1, 2, 3], [2, 3, 1]];
+      return svg(dotsGrid(counts[r][c]));
+    },
+    dists: () => [
+      svg(dotsGrid(2)), svg(dotsGrid(3)), svg(dotsGrid(4)),
+      svg(circ(30, 50, 5.5)), svg(circ(50, 50, 11)), svg(circ(70, 50, 5.5)),
+      svg(circ(50, 30, 5.5) + circ(50, 50, 5.5) + circ(50, 70, 5.5))
+    ]
+  },
+  {
+    name: '大小循环',
+    grid: (r, c) => {
+      const sizes = [20, 28, 36];
+      return svg(circ(50, 50, sizes[(r + c) % 3]));
+    },
+    dists: () => [
+      svg(circ(50, 50, 20)), svg(circ(50, 50, 36)), svg(circ(50, 50, 24)),
+      svg(circ(50, 50, 32)), svg(sq(50, 50, 44)), svg(tri(50, 50, 36)),
+      svg(circ(50, 50, 28, HALF))
+    ]
+  },
+  {
+    name: '填充循环',
+    grid: (r, c) => {
+      const fills = [SOLID, HALF, EMPTY];
+      return svg(sq(50, 50, 36, fills[(r + c) % 3]));
+    },
+    dists: () => [
+      svg(sq(50, 50, 36, SOLID)), svg(sq(50, 50, 36, EMPTY)),
+      svg(circ(50, 50, 22, HALF)), svg(tri(50, 50, 30, HALF)),
+      svg(pent(50, 50, 24, HALF)), svg(sq(50, 50, 24, HALF)),
+      svg(sq(50, 50, 36, EMPTY) + sq(50, 50, 14, SOLID))
+    ]
+  },
+  {
+    name: '相交部分',
+    grid: (r, c) => {
+      const h = line(30, 50, 70, 50);
+      const v = line(50, 30, 50, 70);
+      return svg((c === 0 ? h : '') + (c === 1 ? v : '') + (c === 2 ? h + v : ''));
+    },
+    dists: () => [
+      svg(line(30, 50, 70, 50)), svg(line(50, 30, 50, 70)),
+      svg(crossX(50, 50, 56)),
+      svg(line(50, 30, 50, 52) + line(32, 52, 68, 52)),
+      svg(line(50, 48, 50, 70) + line(32, 48, 68, 48)),
+      svg(plus(50, 50, 28)), svg(plus(50, 50, 56))
+    ]
+  },
+  {
+    name: '旋转 90°（L 形）',
+    grid: (r, c) => svg(LShape((r + c) * 90 % 360)),
+    dists: () => [
+      svg(LShape(90)), svg(LShape(180)), svg(LShape(270)),
+      svg(mirrorX(LShape(0))), svg(mirrorX(LShape(90))),
+      svg('<g transform="scale(0.75) translate(17 17)">' + LShape(0) + '</g>'),
+      svg(LShape(45))
+    ]
+  },
+  {
+    name: '边数循环',
+    grid: (r, c) => {
+      const shapes = [
+        () => sq(50, 50, 34),
+        () => pent(50, 50, 24),
+        () => hex(50, 50, 24)
+      ];
+      return svg(shapes[(r + c) % 3]());
+    },
+    dists: () => [
+      svg(sq(50, 50, 34)), svg(hex(50, 50, 24)), svg(tri(50, 50, 30)),
+      svg(ngon(50, 50, 7, 26)), svg(sq(50, 50, 34, SOLID, 45)),
+      svg(pent(50, 50, 24, SOLID, 36)), svg(pent(50, 50, 24, HALF))
+    ]
+  },
+  {
+    name: '镜像对称',
+    grid: (r, c) => svg(c === 2 ? mirrorX(stair()) : stair()),
+    dists: () => [
+      svg(stair()),
+      svg('<g transform="rotate(90 50 50)">' + stair() + '</g>'),
+      svg('<g transform="rotate(180 50 50)">' + stair() + '</g>'),
+      svg('<g transform="rotate(270 50 50)">' + stair() + '</g>'),
+      svg('<g transform="rotate(90 50 50)">' + mirrorX(stair()) + '</g>'),
+      svg('<g transform="scale(0.8) translate(12 12)">' + stair() + '</g>'),
+      svg('<g transform="scale(0.8) translate(12 12)">' + mirrorX(stair()) + '</g>')
+    ]
+  },
+  {
+    name: '方向交替',
+    grid: (r, c) => svg(arrow(50, 50, 60, (r + c) % 2 === 0 ? 0 : 180)),
+    dists: () => [
+      svg(arrow(50, 50, 60, 180)), svg(arrow(50, 50, 60, 90)),
+      svg(arrow(50, 50, 60, 270)), svg(arrow(50, 50, 60, 45)),
+      svg(arrow(50, 50, 60, 315)), svg(arrow(50, 50, 60, 0, HALF)),
+      svg(arrow(50, 50, 74, 0))
+    ]
+  },
+  {
+    name: '嵌套形状',
+    grid: (r, c) => {
+      const outer = [
+        () => circ(50, 50, 34),
+        () => sq(50, 50, 56),
+        () => tri(50, 50, 44)
+      ];
+      const inner = [
+        () => circ(50, 50, 11),
+        () => sq(50, 50, 19),
+        () => tri(50, 50, 17)
+      ];
+      return svg(outer[r]() + inner[c]());
+    },
+    dists: () => [
+      svg(tri(50, 50, 44) + circ(50, 50, 11)),
+      svg(tri(50, 50, 44) + sq(50, 50, 19)),
+      svg(sq(50, 50, 56) + tri(50, 50, 17)),
+      svg(circ(50, 50, 34) + tri(50, 50, 17)),
+      svg(tri(50, 50, 44)),
+      svg(tri(50, 50, 44) + sq(50, 50, 19, SOLID, 45)),
+      svg(tri(50, 50, 44) + pent(50, 50, 13))
+    ]
+  },
+  {
+    name: '元素相减',
+    grid: (r, c) => {
+      const A = [
+        circ(35, 50, 12) + sq(65, 50, 22),
+        tri(35, 50, 22) + circ(65, 50, 12),
+        sq(35, 50, 22) + tri(65, 50, 22)
+      ];
+      const B = [sq(65, 50, 22), circ(65, 50, 12), tri(65, 50, 22)];
+      const D = [circ(35, 50, 12), tri(35, 50, 22), sq(35, 50, 22)];
+      return svg((c === 0 ? A[r] : '') + (c === 1 ? B[r] : '') + (c === 2 ? D[r] : ''));
+    },
+    dists: () => [
+      svg(circ(35, 50, 12)), svg(tri(35, 50, 22)),
+      svg(sq(65, 50, 22)), svg(sq(50, 50, 22)),
+      svg(sq(35, 50, 22) + tri(65, 50, 22)),
+      svg(sq(35, 50, 22, SOLID, 45)), svg(sq(35, 50, 22, HALF))
+    ]
+  },
+  {
+    name: '位置互换',
+    grid: (r, c) => {
+      const pairs = [
+        [() => circ(35, 50, 12), () => sq(65, 50, 22)],
+        [() => tri(35, 50, 22), () => circ(65, 50, 12)],
+        [() => sq(35, 50, 22), () => tri(65, 50, 20)]
+      ];
+      const A = pairs[r][0](), B = pairs[r][1]();
+      return svg(c === 2 ? B + A : A + B);
+    },
+    dists: () => [
+      svg(sq(35, 50, 22) + tri(65, 50, 20)),
+      svg(sq(35, 50, 22)),
+      svg(tri(65, 50, 20)),
+      svg(sq(50, 32, 22) + tri(50, 68, 20)),
+      svg(tri(35, 50, 20) + tri(65, 50, 20)),
+      svg(sq(35, 50, 22) + sq(65, 50, 22)),
+      svg(circ(35, 50, 12) + tri(65, 50, 20))
+    ]
+  },
+  {
+    name: '旋转 180°（旗帜）',
+    grid: (r, c) => svg(c === 2 ? '<g transform="rotate(180 50 50)">' + flagR() + '</g>' : flagR()),
+    dists: () => [
+      svg(flagR()),
+      svg('<g transform="rotate(90 50 50)">' + flagR() + '</g>'),
+      svg('<g transform="rotate(270 50 50)">' + flagR() + '</g>'),
+      svg(mirrorX(flagR())),
+      svg('<g transform="scale(0.8) translate(12 12)">' + flagR() + '</g>'),
+      svg(line(42, 26, 42, 74) + tri(60, 36, 22, HALF, 90)),
+      svg(line(42, 26, 42, 74))
+    ]
+  },
+  {
+    name: '行列数量相加',
+    grid: (r, c) => svg(dotsRow(r + c + 1)),
+    dists: () => [
+      svg(dotsRow(3)), svg(dotsRow(4)), svg(dotsRow(6, 5.5)),
+      svg(dotsRow(2)), svg(dotsGrid(5)), svg(dotsCol(5)),
+      svg(dotsRow(5, 7.5))
+    ]
+  },
+  {
+    name: '旋转+填充复合',
+    grid: (r, c) => {
+      const fills = [SOLID, EMPTY, HALF];
+      return svg(arrow(50, 50, 60, c * 90, fills[r]));
+    },
+    dists: () => [
+      svg(arrow(50, 50, 60, 180, SOLID)), svg(arrow(50, 50, 60, 180, EMPTY)),
+      svg(arrow(50, 50, 60, 270, HALF)), svg(arrow(50, 50, 60, 90, HALF)),
+      svg(arrow(50, 50, 60, 0, HALF)), svg(arrow(50, 50, 74, 180, HALF)),
+      svg(arrow(50, 50, 60, 0, SOLID) + arrow(50, 50, 60, 180, SOLID))
+    ]
+  }
+];
+
+/* ---- 计分：原始分 → IQ（均值 100，标准差 15） ---- */
+function iqFromRaw(raw) {
+  return Math.max(55, Math.min(145, Math.round(100 + 15 * (raw - 11.5) / 3.2)));
+}
+function levelOf(iq) {
+  if (iq >= 140) return '天才级';
+  if (iq >= 130) return '非常优秀';
+  if (iq >= 120) return '优秀';
+  if (iq >= 110) return '中上';
+  if (iq >= 90)  return '中等';
+  if (iq >= 80)  return '中下';
+  if (iq >= 70)  return '偏低';
+  return '较低';
+}
+/* 正态累积分布（误差函数近似，Abramowitz-Stegun 7.1.26） */
+function erf(x) {
+  const s = x < 0 ? -1 : 1;
+  x = Math.abs(x);
+  const t = 1 / (1 + 0.3275911 * x);
+  const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+  return s * y;
+}
+function phi(z) { return 0.5 * (1 + erf(z / Math.SQRT2)); }
+/* 百分位（保留 2 位小数精度，字符串化时自动去尾零：50 / 62.7 / 99.98） */
+function percentileOf(iq) { return Math.round(phi((iq - 100) / 15) * 10000) / 100; }
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ============================================================
+ * 二、UI 部分（浏览器环境）
+ * ============================================================ */
+if (typeof document !== 'undefined') {
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const TOTAL_TIME = 15 * 60; // 15 分钟
+  const $start = $('screen-start'), $test = $('screen-test'), $result = $('screen-result');
+  const $pay = $('screen-pay');
+
+  let state = null;       // { answers: Map<qIdx,svgStr>, startTs }
+  let lastResult = null;  // 交卷后暂存结果，解锁时渲染
+  let qIdx = 0;       // 当前题
+  let options = [];   // 当前题的 8 个选项
+  let timerId = null;
+
+  /* ---- 主题切换 ---- */
+  const themeBtn = $('themeBtn');
+  function applyTheme() {
+    const t = document.documentElement.dataset.theme;
+    themeBtn.textContent = t === 'dark' ? '☀️ 浅色' : '🌙 深色';
+  }
+  themeBtn.addEventListener('click', () => {
+    const cur = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = cur;
+    try { localStorage.setItem('iq-theme', cur); } catch (e) { /* 忽略 */ }
+    applyTheme();
+  });
+  try {
+    const saved = localStorage.getItem('iq-theme');
+    if (saved) document.documentElement.dataset.theme = saved;
+  } catch (e) { /* 忽略 */ }
+  applyTheme();
+
+  /* ---- 页面切换 ---- */
+  function show(screen) {
+    $start.hidden = screen !== 'start';
+    $test.hidden = screen !== 'test';
+    $pay.hidden = screen !== 'pay';
+    $result.hidden = screen !== 'result';
+    window.scrollTo(0, 0);
+  }
+
+  /* ---- 开始 ---- */
+  $('demo1').innerHTML = svg(dotsRow(1));
+  $('demo2').innerHTML = svg(dotsRow(2));
+  $('startBtn').addEventListener('click', () => {
+    state = { answers: new Map(), startTs: Date.now() };
+    qIdx = 0;
+    startTimer();
+    renderQuestion();
+    show('test');
+  });
+
+  /* ---- 计时器 ---- */
+  function startTimer() {
+    clearInterval(timerId);
+    const endTs = state.startTs + TOTAL_TIME * 1000;
+    const tick = () => {
+      const left = Math.max(0, endTs - Date.now());
+      const m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
+      const el = $('timer');
+      el.textContent = '⏱ ' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      el.classList.toggle('warn', left <= 60000);
+      if (left <= 0) finish(true);
+    };
+    tick();
+    timerId = setInterval(tick, 250);
+  }
+
+  /* ---- 渲染当前题 ---- */
+  function renderQuestion() {
+    const q = QUESTIONS[qIdx];
+    options = shuffle([q.grid(2, 2)].concat(q.dists()));
+    $('qCount').textContent = '第 ' + (qIdx + 1) + ' / ' + QUESTIONS.length + ' 题';
+
+    // 题号导航
+    const nav = $('dotsNav');
+    nav.innerHTML = '';
+    QUESTIONS.forEach((_, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = i + 1;
+      b.className = (i === qIdx ? 'current' : '') + (state.answers.has(i) ? ' answered' : '');
+      b.addEventListener('click', () => { qIdx = i; renderQuestion(); });
+      nav.appendChild(b);
+    });
+
+    // 3×3 矩阵
+    const mtx = $('matrix');
+    mtx.innerHTML = '';
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        if (r === 2 && c === 2) {
+          cell.classList.add('missing');
+          cell.textContent = '?';
+        } else {
+          cell.innerHTML = q.grid(r, c);
+        }
+        mtx.appendChild(cell);
+      }
+    }
+
+    // 选项
+    const optBox = $('options');
+    optBox.innerHTML = '';
+    options.forEach((fig, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-label', '选项 ' + (i + 1));
+      b.innerHTML = '<span class="tag">' + String.fromCharCode(65 + i) + '</span>' + fig;
+      if (state.answers.get(qIdx) === fig) b.classList.add('selected');
+      b.addEventListener('click', () => {
+        state.answers.set(qIdx, fig);
+        optBox.querySelectorAll('button').forEach(x => x.classList.remove('selected'));
+        b.classList.add('selected');
+        nav.querySelectorAll('button').forEach(x => {
+          if (Number(x.textContent) === qIdx + 1) x.classList.add('answered');
+        });
+      });
+      optBox.appendChild(b);
+    });
+  }
+
+  $('prevBtn').addEventListener('click', () => { if (qIdx > 0) { qIdx--; renderQuestion(); } });
+  $('nextBtn').addEventListener('click', () => {
+    if (qIdx < QUESTIONS.length - 1) { qIdx++; renderQuestion(); }
+  });
+
+  /* ---- 交卷 ---- */
+  $('submitBtn').addEventListener('click', () => {
+    const unanswered = QUESTIONS.length - state.answers.size;
+    if (unanswered > 0) {
+      if (!window.confirm('还有 ' + unanswered + ' 题未作答，确定交卷吗？')) return;
+    }
+    finish(false);
+  });
+
+  function finish(byTimeout) {
+    clearInterval(timerId);
+    const raw = QUESTIONS.reduce((n, q, i) => n + (state.answers.get(i) === q.grid(2, 2) ? 1 : 0), 0);
+    const used = Math.round((Date.now() - state.startTs) / 1000);
+    const m = Math.floor(used / 60), s = used % 60;
+    lastResult = {
+      raw: raw,
+      iq: iqFromRaw(raw),
+      tstr: String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0'),
+      byTimeout: byTimeout
+    };
+    show('pay'); // 先锁结果，支付后解锁
+  }
+
+  /* ---- 解锁后渲染结果页 ---- */
+  function renderResult(r) {
+    $('heroIQ').textContent = r.iq;
+    $('levelChip').textContent = levelOf(r.iq);
+    $('resultSub').textContent = '答对 ' + r.raw + ' / ' + QUESTIONS.length + ' 题 · 用时 ' + r.tstr
+      + (r.byTimeout ? ' · 时间到自动交卷' : '');
+    renderChart(r.iq);
+    renderReview(r.raw);
+    show('result');
+  }
+
+  /* ---- 正态分布图 ---- */
+  function renderChart(iq) {
+    const W = 560, H = 250, padL = 34, padR = 34, top = 38, base = 212;
+    const xp = (x) => padL + (x - 55) / (145 - 55) * (W - padL - padR);
+    const dens = (x) => Math.exp(-Math.pow((x - 100) / 15, 2) / 2);
+    const yp = (y) => base - y * (base - top);
+
+    // 曲线路径
+    let d = '';
+    for (let x = 55; x <= 145; x += 0.5) {
+      d += (d ? 'L' : 'M') + xp(x).toFixed(1) + ' ' + yp(dens(x)).toFixed(1) + ' ';
+    }
+    const curve = '<path d="' + d + '" fill="none" stroke="var(--muted)" stroke-width="2"/>';
+
+    // 坐标轴与刻度
+    let ticks = '';
+    [55, 70, 85, 100, 115, 130, 145].forEach(x => {
+      ticks += '<line x1="' + xp(x) + '" y1="' + base + '" x2="' + xp(x) + '" y2="' + (base + 4)
+        + '" stroke="var(--muted)" stroke-width="1.5"/>'
+        + '<text x="' + xp(x) + '" y="' + (base + 18)
+        + '" text-anchor="middle" font-size="12" fill="var(--muted)">' + x + '</text>';
+    });
+    const axis = '<line x1="' + padL + '" y1="' + base + '" x2="' + (W - padR) + '" y2="' + base
+      + '" stroke="var(--baseline)" stroke-width="1.5"/>';
+
+    // 标记点 + 指引线 + 直接标签
+    const mx = xp(iq), my = yp(dens(iq));
+    const labelX = Math.max(48, Math.min(W - 48, mx));
+    const marker =
+      '<line x1="' + mx + '" y1="' + my + '" x2="' + mx + '" y2="' + base
+        + '" stroke="var(--gridline)" stroke-width="1.5"/>'
+      + '<circle cx="' + mx + '" cy="' + my + '" r="5.5" fill="var(--series1)" stroke="var(--surface)" stroke-width="2"/>'
+      + '<text x="' + labelX + '" y="' + (my - 12) + '" text-anchor="middle" font-size="15" font-weight="700" fill="var(--ink)">'
+        + iq + '</text>'
+      + '<text x="' + labelX + '" y="' + (my + 2) + '" text-anchor="middle" font-size="11" fill="var(--ink2)">'
+        + '超过 ' + percentileOf(iq) + '% 的人</text>'
+      + '<circle cx="' + mx + '" cy="' + my + '" r="16" fill="transparent" id="iqMarkerHit"/>';
+
+    $('chartWrap').innerHTML =
+      '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="你的 IQ 为 ' + iq
+        + '，位于正态分布均值 100 的右侧 ' + (iq >= 100 ? '' : '') + '位置">'
+      + axis + ticks + curve + marker + '</svg>'
+      + '<div id="chartTooltip"></div>';
+
+    // 悬停提示
+    const tip = $('chartTooltip');
+    const hit = document.getElementById('iqMarkerHit');
+    const wrap = $('chartWrap');
+    hit.addEventListener('mousemove', (e) => {
+      const rect = wrap.getBoundingClientRect();
+      tip.style.display = 'block';
+      tip.style.left = Math.min(rect.width - 150, e.clientX - rect.left + 12) + 'px';
+      tip.style.top = (e.clientY - rect.top - 40) + 'px';
+      tip.textContent = 'IQ ' + iq + ' · 超过 ' + percentileOf(iq) + '% 的人';
+    });
+    hit.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+  }
+
+  /* ---- 答题回顾表 ---- */
+  function renderReview(raw) {
+    const body = $('reviewBody');
+    body.innerHTML = '';
+    QUESTIONS.forEach((q, i) => {
+      const ans = state.answers.get(i);
+      const correct = q.grid(2, 2);
+      const ok = ans === correct;
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td class="num">' + (i + 1) + '</td>'
+        + '<td class="type">' + q.name + '</td>'
+        + '<td>' + (ans
+            ? '<span class="mini">' + ans + '</span>'
+            : '<span class="mini na">未答</span>') + '</td>'
+        + '<td><span class="mini">' + correct + '</span></td>'
+        + '<td class="' + (ok ? 'ok' : 'bad') + '">' + (ok ? '✓' : '✗') + '</td>';
+      body.appendChild(tr);
+    });
+  }
+
+  /* ---- 重新开始 / 首页 ---- */
+  $('retryBtn').addEventListener('click', () => $('startBtn').click());
+  $('homeBtn').addEventListener('click', () => show('start'));
+
+  /* ---- 支付解锁 ---- */
+  function renderQR(box, src, label) {
+    const inner = src
+      ? '<div class="qr-frame"><img src="' + src + '" alt="' + label + '"></div>'
+      : '<div class="qr-frame qr-empty">收款码待替换<br>请编辑文件顶部<br>WX_QR / ALI_QR</div>';
+    box.innerHTML = inner + '<div class="qr-label">' + label + '</div>';
+  }
+  renderQR($('qrWx'), WX_QR, '微信 扫码支付');
+  renderQR($('qrAli'), ALI_QR, '支付宝 扫码支付');
+  $('payPrice').textContent = PRICE;
+  $('payAmount').textContent = PRICE;
+  $('payUnlockBtn').addEventListener('click', () => { if (lastResult) renderResult(lastResult); });
+  $('payHomeBtn').addEventListener('click', () => show('start'));
+
+  /* ---- 测试中防止误刷新 ---- */
+  window.addEventListener('beforeunload', (e) => {
+    if (!$test.hidden || !$pay.hidden) { e.preventDefault(); e.returnValue = ''; }
+  });
+})();
+}
+</script>
+</body>
+</html>
